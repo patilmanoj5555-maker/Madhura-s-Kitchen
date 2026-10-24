@@ -76,7 +76,31 @@ function openCart(){const items=cart.map(i=>{const p=state.products.find(x=>x.id
 function changeQty(id,d){const i=cart.find(x=>x.id===id);if(!i)return;i.qty+=d;if(i.qty<=0)cart=cart.filter(x=>x.id!==id);updateCartCount();openCart()}
 function placeOrder(){if(!cart.length)return;const name=document.getElementById('custName').value.trim();const phone=document.getElementById('custPhone').value.trim();const address=document.getElementById('custAddress').value.trim();if(!name||!phone||!address){toast('Please enter name, mobile and address');return}const items=cart.map(i=>{const p=state.products.find(x=>x.id===i.id);return {id:p.id,name:p.name,qty:i.qty,price:p.price}});const total=items.reduce((s,i)=>s+i.qty*i.price,0);const order={id:'MK-'+Date.now().toString().slice(-8),date:new Date().toLocaleString('en-IN'),customer:name,phone,address,items,total,status:'Received',paymentStatus:'Pending',paid:0};state.orders.unshift(order);state.customers=state.customers||[];const existing=state.customers.find(c=>c.phone===phone);if(existing){existing.orders=(existing.orders||0)+1;existing.spent=(existing.spent||0)+total;existing.lastOrder=order.date}else state.customers.push({name,phone,orders:1,spent:total,lastOrder:order.date});save();cart=[];updateCartCount();closeModal();toast('Order '+order.id+' received successfully')}
 function openBulk(){showModal(`<div class="modalbox"><div class="modalhead"><h2 class="serif">Bulk / Catering Enquiry</h2><button class="x" onclick="closeModal()">×</button></div><div class="formgrid"><div class="field"><label>Name</label><input id="bulkName"></div><div class="field"><label>Mobile</label><input id="bulkPhone"></div><div class="field"><label>Event Date</label><input id="bulkDate" type="date"></div><div class="field"><label>People</label><input id="bulkPeople" type="number" min="1"></div><div class="field full"><label>Requirement</label><textarea id="bulkReq" placeholder="Menu, delivery time, veg/non-veg, special requirements..."></textarea></div></div><div style="text-align:right;margin-top:16px"><button class="btn btn-wine" onclick="toast('Enquiry captured. Owner can follow up from dashboard.');closeModal()">Submit Enquiry</button></div></div>`)}
-function showModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('modal').classList.add('show')};function closeModal(){const m=document.getElementById('modal');if(m){m.classList.remove('show');m.innerHTML=''}}
+
+function showModal(html) {
+  let modal = document.getElementById('modal');
+
+  // Re-create the modal if the admin view removed it
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal';
+    modal.className = 'modal';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = html;
+  modal.classList.add('show');
+}
+
+function closeModal() {
+  const modal = document.getElementById('modal');
+
+  if (modal) {
+    modal.classList.remove('show');
+    modal.innerHTML = '';
+  }
+}
+
 function openAdminLogin(){showModal(`<div class="modalbox" style="max-width:500px"><div class="modalhead"><h2 class="serif">Owner Login</h2><button class="x" onclick="closeModal()">×</button></div><div class="notice">Prototype login only. For production, connect this interface to a secure backend authentication system.</div><div class="field" style="margin-top:15px"><label>Username</label><input id="loginUser" value="admin"></div><div class="field" style="margin-top:12px"><label>Password</label><input id="loginPass" type="password"></div><div style="text-align:right;margin-top:16px"><button class="btn btn-wine" onclick="loginAdmin()">Login to Dashboard</button></div></div>`)}
 function loginAdmin(){if(document.getElementById('loginUser').value==='admin'&&document.getElementById('loginPass').value==='Madhura@123'){adminLogged=true;closeModal();renderAdmin()}else toast('Invalid demo login')}
 function renderAdmin(){if(!adminLogged)return;document.getElementById('app').innerHTML=`<div class="admin-layout"><aside class="admin-side"><img src="${state.business.logo}"><h2>${state.business.name}</h2><div style="color:#d9bd78;font-size:12px;margin-bottom:20px">OWNER DASHBOARD</div><button class="sidebtn ${adminSection==='dashboard'?'active':''}" onclick="adminSection='dashboard';renderAdmin()">📊 Dashboard</button><button class="sidebtn ${adminSection==='menu'?'active':''}" onclick="adminSection='menu';renderAdmin()">🍽 Menu Manager</button><button class="sidebtn ${adminSection==='orders'?'active':''}" onclick="adminSection='orders';renderAdmin()">🧾 Orders</button><button class="sidebtn ${adminSection==='business'?'active':''}" onclick="adminSection='business';renderAdmin()">🏨 Business Profile</button><button class="sidebtn ${adminSection==='inventory'?'active':''}" onclick="adminSection='inventory';renderAdmin()">📦 Inventory</button><button class="sidebtn ${adminSection==='purchases'?'active':''}" onclick="adminSection='purchases';renderAdmin()">🛒 Purchases</button><button class="sidebtn ${adminSection==='suppliers'?'active':''}" onclick="adminSection='suppliers';renderAdmin()">🚚 Suppliers</button><button class="sidebtn ${adminSection==='expenses'?'active':''}" onclick="adminSection='expenses';renderAdmin()">💸 Expenses</button><button class="sidebtn ${adminSection==='customers'?'active':''}" onclick="adminSection='customers';renderAdmin()">👥 Customers</button><button class="sidebtn ${adminSection==='reports'?'active':''}" onclick="adminSection='reports';renderAdmin()">📈 Reports</button><button class="sidebtn ${adminSection==='settings'?'active':''}" onclick="adminSection='settings';renderAdmin()">⚙️ Settings</button><button class="sidebtn" onclick="exportGitHubState()">⬇️ Publish to GitHub</button><button class="sidebtn" onclick="adminLogged=false;renderSite()">↩ View Website</button></aside><main class="admin-main">${adminSection==='dashboard'?dashboardHTML():adminSection==='menu'?menuAdminHTML():adminSection==='orders'?ordersHTML():adminSection==='business'?businessHTML():adminSection==='inventory'?inventoryHTML():adminSection==='purchases'?purchasesHTML():adminSection==='suppliers'?suppliersHTML():adminSection==='expenses'?expensesHTML():adminSection==='customers'?customersHTML():adminSection==='reports'?reportsHTML():settingsHTML()}</main></div>`}
