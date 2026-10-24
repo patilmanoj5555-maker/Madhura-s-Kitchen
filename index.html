@@ -51,7 +51,28 @@ const categoryImages={
 'VEG MAHARASHTRIAN':PHOTO_POOL[0],'NON-VEG MAHARASHTRIAN':PHOTO_POOL[1],'CHINESE':PHOTO_POOL[2],'ITALIAN':PHOTO_POOL[3],'KOREAN':PHOTO_POOL[5],'SOUTH INDIAN & GOA NON-VEG':PHOTO_POOL[6]};
 function seedProducts(){let out=[];let id=1;for(const [cat,items] of Object.entries(menus)){items.forEach((x,i)=>out.push({id:id++,name:x[0],price:x[1],category:cat,description:descriptions[cat],photo:PHOTO_POOL[(i+Object.keys(menus).indexOf(cat)*2)%PHOTO_POOL.length],active:true,stock:50}));}return out}
 const defaultState={business:{name:'Madhura Kitchen',tagline:'चव अशी की प्रत्येक घासात महाराष्ट्राची माया आणि घरगुती प्रेम जाणवेल!',address:'Your Hotel Address, City, Maharashtra',phone:'+91 00000 00000',whatsapp:'+91 00000 00000',email:'hello@madhurakitchen.in',hours:'11:00 AM – 11:00 PM',ownerName:'Madhura Kitchen Owner',logo:'assets/madhura-kitchen-logo.png',ownerPhoto:'assets/owner-photo.jpg'},products:seedProducts(),orders:[],expenses:[],suppliers:[],purchases:[],inventory:[],customers:[],payments:[],staff:[],settings:{deliveryCharge:40,minOrder:199,currency:'INR'}};
-let state=JSON.parse(localStorage.getItem('mkRoyalState')||'null')||defaultState;function save(){localStorage.setItem('mkRoyalState',JSON.stringify(state))}
+let state=JSON.parse(localStorage.getItem('mkRoyalState')||'null')||defaultState;function save() {
+  try {
+    localStorage.setItem('mkRoyalState', JSON.stringify(state));
+    return true;
+  } catch (error) {
+    console.error('Madhura Kitchen save error:', error);
+
+    if (
+      error.name === 'QuotaExceededError' ||
+      error.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+    ) {
+      toast('Storage full! Try a smaller photo or an image URL.');
+    } else {
+      toast('Save failed. Please check the browser console.');
+    }
+
+    return false;
+  }
+}
+
+
+  
 let cart=[];let adminLogged=false;let adminSection='dashboard';
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function money(n){return '₹'+Number(n).toLocaleString('en-IN')}
